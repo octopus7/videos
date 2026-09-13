@@ -20,6 +20,12 @@ const collections = await getPublishedCollections();
           <div>
             <p class="folder-label">영상 페이지</p>
             <h2>{collection.label}</h2>
+            {collection.contentHtml && (
+              <div
+                class="folder-description"
+                set:html={collection.contentHtml}
+              ></div>
+            )}
             <p class="folder-count">{collection.videos.length}개 영상</p>
           </div>
         </a>
@@ -111,6 +117,24 @@ const collections = await getPublishedCollections();
     margin: 0.5rem 0 0;
     color: #6b7280;
     font-size: 0.85rem;
+  }
+
+  .folder-description {
+    margin-top: 0.55rem;
+    color: #4b5563;
+    font-size: 0.9rem;
+    line-height: 1.5;
+  }
+
+  .folder-description :global(p) {
+    margin: 0;
+  }
+
+  .folder-description :global(h1),
+  .folder-description :global(h2),
+  .folder-description :global(h3) {
+    margin: 0;
+    font-size: 0.95rem;
   }
 
   .empty {

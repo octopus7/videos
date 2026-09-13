@@ -20,6 +20,9 @@ const { collection } = Astro.props;
     <p class="eyebrow">VIDEO COLLECTION</p>
     <h1>{collection.label}</h1>
     <p class="path">{collection.slug}</p>
+    {collection.contentHtml && (
+      <div class="page-content" set:html={collection.contentHtml}></div>
+    )}
 
     <div class="grid">
       {collection.videos.map((video) => (
@@ -73,6 +76,30 @@ const { collection } = Astro.props;
     color: #6b7280;
     font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
     font-size: 0.85rem;
+  }
+
+  .page-content {
+    max-width: 720px;
+    margin: 0 0 2rem;
+    color: #4b5563;
+    font-size: 1.05rem;
+    line-height: 1.7;
+  }
+
+  .page-content :global(p) {
+    margin: 0 0 1rem;
+  }
+
+  .page-content :global(h1),
+  .page-content :global(h2),
+  .page-content :global(h3) {
+    margin: 1.25rem 0 0.5rem;
+    color: #172033;
+  }
+
+  .page-content :global(ul),
+  .page-content :global(ol) {
+    padding-left: 1.4rem;
   }
 
   .grid {

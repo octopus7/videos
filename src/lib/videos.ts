@@ -1,9 +1,11 @@
-import { readdir } from "node:fs/promises";
+import { readFile, readdir } from "node:fs/promises";
 import path from "node:path";
+import { marked } from "marked";
 
 const videoRoot = path.resolve(process.cwd(), "public/videos");
 const supportedExtensions = new Set([".mp4", ".webm", ".mov", ".m4v"]);
 const publishMarker = ".published";
+const pageContentFile = ".page.md";
 
 export interface VideoFile {
   title: string;
@@ -19,6 +21,8 @@ export interface VideoCollection {
   slug: string;
   pageUrl: string;
   videos: VideoFile[];
+  contentHtml: string;
+  contentText: string;
 }
 
 function encodePath(value: string) {
@@ -47,6 +51,32 @@ function makeTitle(slug: string) {
     .replace(/\.[^/.]+$/, "")
     .replace(/[-_]+/g, " ")
     .replace(/\b\w/g, (character) => character.toUpperCase());
+}
+
+async function readCollectionContent(folderSlug: string) {
+  const contentPath = path.join(
+    videoRoot,
+    ...folderSlug.split("/"),
+    pageContentFile,
+  );
+
+  try {
+    const markdown = await readFile(contentPath, "utf8");
+    return {
+      contentHtml: marked.parse(markdown),
+      contentText: markdown
+        .replace(/```[\s\S]*?```/g, "")
+        .replace(/^\s{0,3}#{1,6}\s+/gm, "")
+        .replace(/[*_`>\[\]]/g, "")
+        .replace(/\s+/g, " ")
+        .trim(),
+    };
+  } catch (error) {
+    if (error && typeof error === "object" && "code" in error && error.code === "ENOENT") {
+      return { contentHtml: "", contentText: "" };
+    }
+    throw error;
+  }
 }
 
 async function walk(
@@ -121,11 +151,13 @@ export async function getPublishedCollections() {
 
     let collection = collections.get(folderSlug);
     if (!collection) {
+      const content = await readCollectionContent(folderSlug);
       collection = {
         label: folderSlug.split("/").at(-1) ?? folderSlug,
         slug: folderSlug,
         pageUrl: `/videos/${encodePath(folderSlug)}`,
         videos: [],
+        ...content,
       };
       collections.set(folderSlug, collection);
     }
