@@ -1,0 +1,87 @@
+---
+import SiteLayout from "../../layouts/SiteLayout.astro";
+import { getVideos } from "../../lib/videos";
+
+export async function getStaticPaths() {
+  const videos = await getVideos();
+
+  return videos.map((video) => ({
+    params: { path: video.slug },
+    props: { video },
+  }));
+}
+
+const { video } = Astro.props;
+---
+
+<SiteLayout title={`${video.title} · TunaVideo`} description={video.relativePath}>
+  <article class="video-page">
+    <a class="back-link" href="/">← 전체 영상</a>
+    <p class="path">{video.relativePath}</p>
+    <h1>{video.title}</h1>
+
+    <div class="player-shell">
+      <video controls playsinline preload="metadata">
+        <source src={video.assetUrl} type={video.mimeType} />
+        브라우저가 영상을 지원하지 않습니다.
+      </video>
+    </div>
+
+    <p class="direct-link">
+      영상 파일 주소:
+      <a href={video.assetUrl}>{video.assetUrl}</a>
+    </p>
+  </article>
+</SiteLayout>
+
+<style>
+  .video-page {
+    max-width: 960px;
+    margin: 0 auto;
+    padding: 3rem 0;
+  }
+
+  .back-link {
+    color: #5b5bd6;
+    font-size: 0.9rem;
+    font-weight: 700;
+    text-decoration: none;
+  }
+
+  .path {
+    margin: 2.5rem 0 0.65rem;
+    color: #6b7280;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-size: 0.85rem;
+  }
+
+  h1 {
+    margin: 0 0 1.5rem;
+    font-size: clamp(2rem, 5vw, 3.5rem);
+    letter-spacing: -0.05em;
+  }
+
+  .player-shell {
+    overflow: hidden;
+    border-radius: 1rem;
+    background: #111827;
+    box-shadow: 0 18px 40px rgb(23 32 51 / 15%);
+  }
+
+  video {
+    display: block;
+    width: 100%;
+  }
+
+  .direct-link {
+    margin-top: 1rem;
+    color: #6b7280;
+    font-size: 0.85rem;
+  }
+
+  .direct-link a {
+    margin-left: 0.4rem;
+    color: #5b5bd6;
+    word-break: break-all;
+  }
+</style>
