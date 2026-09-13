@@ -14,6 +14,20 @@ export interface VideoFile {
   mimeType: string;
 }
 
+export interface VideoCollection {
+  label: string;
+  slug: string;
+  pageUrl: string;
+  videos: VideoFile[];
+}
+
+function encodePath(value: string) {
+  return value
+    .split("/")
+    .map((segment) => encodeURIComponent(segment))
+    .join("/");
+}
+
 function mimeTypeFor(extension: string) {
   switch (extension) {
     case ".webm":
@@ -63,14 +77,8 @@ async function walk(
       .relative(root, absolutePath)
       .replaceAll("\\", "/");
     const slug = relativePath.replace(/\.[^/.]+$/, "");
-    const encodedPath = relativePath
-      .split("/")
-      .map((segment) => encodeURIComponent(segment))
-      .join("/");
-    const encodedSlug = slug
-      .split("/")
-      .map((segment) => encodeURIComponent(segment))
-      .join("/");
+    const encodedPath = encodePath(relativePath);
+    const encodedSlug = encodePath(slug);
 
     videos.push({
       title: makeTitle(relativePath),
@@ -101,4 +109,31 @@ export async function getVideos(options: { publishedOnly?: boolean } = {}) {
 
 export function getPublishedVideos() {
   return getVideos({ publishedOnly: true });
+}
+
+export async function getPublishedCollections() {
+  const videos = await getPublishedVideos();
+  const collections = new Map<string, VideoCollection>();
+
+  for (const video of videos) {
+    const folderSlug = video.relativePath.split("/").slice(0, -1).join("/");
+    if (!folderSlug) continue;
+
+    let collection = collections.get(folderSlug);
+    if (!collection) {
+      collection = {
+        label: folderSlug.split("/").at(-1) ?? folderSlug,
+        slug: folderSlug,
+        pageUrl: `/videos/${encodePath(folderSlug)}`,
+        videos: [],
+      };
+      collections.set(folderSlug, collection);
+    }
+
+    collection.videos.push(video);
+  }
+
+  return [...collections.values()].sort((first, second) =>
+    first.slug.localeCompare(second.slug),
+  );
 }

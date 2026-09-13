@@ -1,38 +1,32 @@
 ---
 import SiteLayout from "../layouts/SiteLayout.astro";
-import { getPublishedVideos } from "../lib/videos";
+import { getPublishedCollections } from "../lib/videos";
 
-const videos = await getPublishedVideos();
+const collections = await getPublishedCollections();
 ---
 
-<SiteLayout title="TunaVideo" description="영상 목록">
+<SiteLayout title="TunaVideo" description="영상 페이지 목록">
   <section class="hero">
     <p class="eyebrow">VIDEO LIBRARY</p>
     <h1>영상 목록</h1>
-    <p class="intro">파일 경로를 기준으로 영상 페이지가 자동 생성됩니다.</p>
+    <p class="intro">공개된 영상 폴더를 선택해 영상을 확인하세요.</p>
   </section>
 
-  {videos.length > 0 ? (
+  {collections.length > 0 ? (
     <div class="grid">
-      {videos.map((video) => (
-        <article class="card">
-          <div class="thumbnail">
-            <video
-              src={video.assetUrl}
-              controls
-              preload="metadata"
-              playsinline
-            ></video>
+      {collections.map((collection) => (
+        <a class="folder-card" href={collection.pageUrl}>
+          <div class="folder-icon" aria-hidden="true">▶</div>
+          <div>
+            <p class="folder-label">영상 페이지</p>
+            <h2>{collection.label}</h2>
+            <p class="folder-count">{collection.videos.length}개 영상</p>
           </div>
-          <div class="card-body">
-            <h2>{video.title}</h2>
-            <p>{video.relativePath}</p>
-          </div>
-        </article>
+        </a>
       ))}
     </div>
   ) : (
-    <p class="empty">public/videos 폴더에 영상을 추가하면 여기에 표시됩니다.</p>
+    <p class="empty">.published 파일이 있는 영상 폴더가 없습니다.</p>
   )}
 </SiteLayout>
 
@@ -67,51 +61,56 @@ const videos = await getPublishedVideos();
     gap: 1.25rem;
   }
 
-  .card {
-    overflow: hidden;
+  .folder-card {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    min-height: 150px;
+    padding: 1.5rem;
     border: 1px solid #e3e6ef;
     border-radius: 1rem;
     background: white;
     color: inherit;
     box-shadow: 0 8px 24px rgb(23 32 51 / 5%);
+    text-decoration: none;
     transition: transform 160ms ease, box-shadow 160ms ease;
   }
 
-  .card:hover {
+  .folder-card:hover {
     transform: translateY(-3px);
     box-shadow: 0 14px 32px rgb(23 32 51 / 10%);
   }
 
-  .thumbnail {
-    position: relative;
-    aspect-ratio: 16 / 9;
-    overflow: hidden;
-    background: #111827;
+  .folder-icon {
+    display: grid;
+    flex: 0 0 3.5rem;
+    place-items: center;
+    width: 3.5rem;
+    height: 3.5rem;
+    border-radius: 1rem;
+    color: white;
+    background: #5b5bd6;
+    font-size: 1.1rem;
   }
 
-  .thumbnail video {
-    display: block;
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-  }
-
-  .card-body {
-    padding: 1rem;
+  .folder-label {
+    margin: 0 0 0.35rem;
+    color: #6b7280;
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
   }
 
   h2 {
     margin: 0;
-    font-size: 1rem;
+    font-size: 1.35rem;
   }
 
-  .card-body p {
-    overflow: hidden;
-    margin: 0.45rem 0 0;
+  .folder-count {
+    margin: 0.5rem 0 0;
     color: #6b7280;
-    font-size: 0.78rem;
-    text-overflow: ellipsis;
-    white-space: nowrap;
+    font-size: 0.85rem;
   }
 
   .empty {
