@@ -1,8 +1,8 @@
 ---
 import SiteLayout from "../layouts/SiteLayout.astro";
-import { getVideos } from "../lib/videos";
+import { getPublishedVideos } from "../lib/videos";
 
-const videos = await getVideos();
+const videos = await getPublishedVideos();
 ---
 
 <SiteLayout title="TunaVideo" description="영상 목록">

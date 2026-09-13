@@ -3,6 +3,7 @@ import path from "node:path";
 
 const videoRoot = path.resolve(process.cwd(), "public/videos");
 const supportedExtensions = new Set([".mp4", ".webm", ".mov", ".m4v"]);
+const publishMarker = ".published";
 
 export interface VideoFile {
   title: string;
@@ -34,17 +35,26 @@ function makeTitle(slug: string) {
     .replace(/\b\w/g, (character) => character.toUpperCase());
 }
 
-async function walk(directory: string, root: string): Promise<VideoFile[]> {
+async function walk(
+  directory: string,
+  root: string,
+  publishedOnly = false,
+): Promise<VideoFile[]> {
   const entries = await readdir(directory, { withFileTypes: true });
   const videos: VideoFile[] = [];
+  const isPublished = entries.some(
+    (entry) => !entry.isDirectory() && entry.name === publishMarker,
+  );
 
   for (const entry of entries) {
     const absolutePath = path.join(directory, entry.name);
 
     if (entry.isDirectory()) {
-      videos.push(...(await walk(absolutePath, root)));
+      videos.push(...(await walk(absolutePath, root, publishedOnly)));
       continue;
     }
+
+    if (publishedOnly && !isPublished) continue;
 
     const extension = path.extname(entry.name).toLowerCase();
     if (!supportedExtensions.has(extension)) continue;
@@ -75,9 +85,9 @@ async function walk(directory: string, root: string): Promise<VideoFile[]> {
   return videos;
 }
 
-export async function getVideos() {
+export async function getVideos(options: { publishedOnly?: boolean } = {}) {
   try {
-    const videos = await walk(videoRoot, videoRoot);
+    const videos = await walk(videoRoot, videoRoot, options.publishedOnly);
     return videos.sort((first, second) =>
       first.relativePath.localeCompare(second.relativePath),
     );
@@ -87,4 +97,8 @@ export async function getVideos() {
     }
     throw error;
   }
+}
+
+export function getPublishedVideos() {
+  return getVideos({ publishedOnly: true });
 }
